@@ -1,0 +1,628 @@
+{
+  "name": "AI Lead Scoring Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "typeform-leads",
+        "options": {}
+      },
+      "id": "72853a18-00d3-4a4b-b114-57172f869608",
+      "name": "Typeform Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "71b95fc5-9d6c-4f1a-b9b0-6a8b7bb76b1f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "firstName",
+              "value": "={{ $json.body.form_response.answers[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "companyName",
+              "value": "={{ $json.body.form_response.answers[1].text }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "budget",
+              "value": "={{ $json.body.form_response.answers[4].choice.label }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "businessNeed",
+              "value": "={{ $json.body.form_response.answers[6].text }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "urgency",
+              "value": "={{ $json.body.form_response.answers[5].choice.label }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7a8b7ae1-4108-451d-991c-a602db18b42d",
+      "name": "Prepare Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this sales lead and provide a comprehensive scoring:\n\nLead Information:\n- Name: {{ $json.firstName }}\n- Company: {{ $json.companyName }}\n- Budget: {{ $json.budget }}\n- Business Need: {{ $json.businessNeed }}\n- Urgency: {{ $json.urgency }}\n\nEvaluate this lead on a scale of 0-100 based on:\n1. Budget size and clarity\n2. Urgency level\n3. Business need specificity and alignment\n4. Company profile\n\nAssign a tier:\n- HOT (75-100): High priority, immediate action\n- WARM (50-74): Good potential, follow up soon\n- COLD (0-49): Low priority, nurture campaign\n\nRespond ONLY with a JSON object in this exact format:\n{\n  \"score\": 85,\n  \"tier\": \"HOT\",\n  \"reasoning\": \"...\",\n  \"suggested_approach\": \"...\"\n}",
+        "options": {
+          "systemMessage": "You are an expert sales lead qualification AI. Analyze leads objectively and provide actionable insights for sales teams."
+        }
+      },
+      "id": "1e7c6e1e-23ac-4003-88d5-1bf312441020",
+      "name": "AI Lead Scorer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        656,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "5b2f9ffb-d22a-4986-91f6-e42b2e554fa4",
+      "name": "GPT-4o Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        512
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "8eVRsItsICYfypzn",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "firstName",
+              "value": "={{ $(\"Prepare Lead Data\").item.json.firstName }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "companyName",
+              "value": "={{ $(\"Prepare Lead Data\").item.json.companyName }}",
+              "type": "string"
+            },
+            {
+              "id": "4",
+              "name": "budget",
+              "value": "={{ $(\"Prepare Lead Data\").item.json.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "5",
+              "name": "businessNeed",
+              "value": "={{ $(\"Prepare Lead Data\").item.json.businessNeed }}",
+              "type": "string"
+            },
+            {
+              "id": "6",
+              "name": "urgency",
+              "value": "={{ $(\"Prepare Lead Data\").item.json.urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "7",
+              "name": "score",
+              "value": "={{ $json.score }}",
+              "type": "number"
+            },
+            {
+              "id": "8",
+              "name": "tier",
+              "value": "={{ $json.tier }}",
+              "type": "string"
+            },
+            {
+              "id": "9",
+              "name": "reasoning",
+              "value": "={{ $json.reasoning }}",
+              "type": "string"
+            },
+            {
+              "id": "10",
+              "name": "suggested_approach",
+              "value": "={{ $json.suggested_approach }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1f6b29b8-626c-476b-bb76-5cc36876bcdc",
+      "name": "Combine Lead & Score",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1088,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appVChD4ae2Tfb8HK",
+          "mode": "list",
+          "cachedResultName": "Lead Scoring",
+          "cachedResultUrl": "https://airtable.com/appVChD4ae2Tfb8HK"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblHvwrfPQgYaqc5z",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appVChD4ae2Tfb8HK/tblHvwrfPQgYaqc5z"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "score": "={{ $json.score }}",
+            "firstName": "={{ $json.firstName }}",
+            "companyName": "={{ $json.companyName }}",
+            "budget": "={{ $json.budget }}",
+            "urgency": "={{ $json.urgency }}",
+            "businessNeed": "={{ $json.businessNeed }}",
+            "tier": "={{ $json.tier }}",
+            "reasoning": "={{ $json.reasoning }}",
+            "suggested_approach": "={{ $json.suggested_approach }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "firstName",
+              "displayName": "firstName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Assignee",
+              "displayName": "Assignee",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Todo",
+                  "value": "Todo"
+                },
+                {
+                  "name": "In progress",
+                  "value": "In progress"
+                },
+                {
+                  "name": "Done",
+                  "value": "Done"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Attachments",
+              "displayName": "Attachments",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Attachment Summary",
+              "displayName": "Attachment Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "companyName",
+              "displayName": "companyName",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "businessNeed",
+              "displayName": "businessNeed",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "tier",
+              "displayName": "tier",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reasoning",
+              "displayName": "reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "suggested_approach",
+              "displayName": "suggested_approach",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "id": "1c225c84-85a2-4115-8ed8-481b1e5d4d1e",
+      "name": "Save to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        304
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "2vytNTsENT637z4g",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "boardItem",
+        "boardId": "5095674752",
+        "groupId": "topics",
+        "name": "={{ $(\"Combine Lead & Score\").item.json.firstName }} - {{ $(\"Combine Lead & Score\").item.json.companyName }}",
+        "additionalFields": {
+          "columnValues": "={{ JSON.stringify({ \"numeric_mm2yypcj\": $(\"Combine Lead & Score\").item.json.score, \"text_mm2yzs16\": $(\"Combine Lead & Score\").item.json.reasoning, \"color_mm2ycraw\": { \"label\": $(\"Combine Lead & Score\").item.json.tier }, \"color_mm2yt614\": { \"label\": $(\"Combine Lead & Score\").item.json.tier }, \"text_mm2y7wh5\": $(\"Combine Lead & Score\").item.json.budget }) }}\n"
+        }
+      },
+      "id": "3183d1f2-cfa3-43e3-a2ff-109eced7f41f",
+      "name": "Create Monday Item",
+      "type": "n8n-nodes-base.mondayCom",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        304
+      ],
+      "credentials": {
+        "mondayComApi": {
+          "id": "5VnkDrt4p7DFS20a",
+          "name": "Monday.com account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $(\"Combine Lead & Score\").item.json.score }}",
+              "rightValue": 75,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fb1da894-8c18-4336-be1d-6700034b41e8",
+      "name": "Is HOT Lead?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0B1B1VST8U",
+          "mode": "list",
+          "cachedResultName": "hot-leads"
+        },
+        "messageType": "block",
+        "blocksUi": "=[\n  {\n    \"type\": \"header\",\n    \"text\": {\n      \"type\": \"plain_text\",\n      \"text\": \"🔥 HOT Lead Alert!\"\n    }\n  },\n  {\n    \"type\": \"section\",\n    \"fields\": [\n      {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Imię:*\\n{{ $('Combine Lead & Score').item.json.firstName }}\"\n      },\n      {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Firma:*\\n{{ $('Combine Lead & Score').item.json.companyName }}\"\n      },\n      {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Score:*\\n{{ $('Combine Lead & Score').item.json.score }}/100\"\n      },\n      {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Budżet:*\\n{{ $('Combine Lead & Score').item.json.budget }}\"\n      },\n      {\n        \"type\": \"mrkdwn\",\n        \"text\": \"*Pilność:*\\n{{ $('Combine Lead & Score').item.json.urgency }}\"\n      }\n    ]\n  },\n  {\n    \"type\": \"section\",\n    \"text\": {\n      \"type\": \"mrkdwn\",\n      \"text\": \"*Rekomendacja AI:*\\n{{ $('Combine Lead & Score').item.json.suggested_approach }}\"\n    }\n  }\n]\n",
+        "text": "=🔥 HOT Lead Alert!\n*Imię:* {{ $('Combine Lead & Score').item.json.firstName }}\n*Firma:* {{ $('Combine Lead & Score').item.json.companyName }}\n*Score:* {{ $('Combine Lead & Score').item.json.score }}/100\n*Budżet:* {{ $('Combine Lead & Score').item.json.budget }}\n*Pilność:* {{ $('Combine Lead & Score').item.json.urgency }}\n*Rekomendacja:* {{ $('Combine Lead & Score').item.json.suggested_approach }}",
+        "otherOptions": {}
+      },
+      "id": "65e4dc79-e407-47bf-93b3-7e4c606bd0c8",
+      "name": "Notify Sales Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1936,
+        304
+      ],
+      "webhookId": "f5002666-009c-48ca-b252-d0d3cff655f0",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "4hXNvomDsEEhFsnT",
+          "name": "Slack OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $input.first().json.output;\nconst text = typeof message === 'string' ? message : JSON.stringify(message);\nconst clean = text.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(clean);\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        320
+      ],
+      "id": "6ef0bf53-ebea-4ebd-be73-43cbf6208012",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Typeform Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Lead Data": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Scorer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Scorer": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4o Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Lead Scorer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Lead & Score": {
+      "main": [
+        [
+          {
+            "node": "Save to Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Airtable": {
+      "main": [
+        [
+          {
+            "node": "Create Monday Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Monday Item": {
+      "main": [
+        [
+          {
+            "node": "Is HOT Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is HOT Lead?": {
+      "main": [
+        [
+          {
+            "node": "Notify Sales Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Sales Team": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Combine Lead & Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ae46309a-9de4-4815-bbe5-202961dbd5c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "58fd5f0fd3d2c154ce94e84831e492494ad1613fba5b13b34efa78d13ac092ff"
+  },
+  "id": "tf4nTuJ3i2zFlP9v",
+  "tags": []
+}
